@@ -11,8 +11,11 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ShellRouteImport } from './routes/_shell'
+import { Route as ShellAskDataRouteImport } from './routes/_shell.ask-data'
 import { Route as ShellBerandaRouteImport } from './routes/_shell.beranda'
 import { Route as ShellChatRouteImport } from './routes/_shell.chat'
+import { Route as ShellDataIndexRouteImport } from './routes/_shell.data.index'
+import { Route as ShellDataDatasetIdRouteImport } from './routes/_shell.data.$datasetId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -22,6 +25,11 @@ const IndexRoute = IndexRouteImport.update({
 const ShellRoute = ShellRouteImport.update({
   id: '/_shell',
   getParentRoute: () => rootRouteImport,
+} as any)
+const ShellAskDataRoute = ShellAskDataRouteImport.update({
+  id: '/ask-data',
+  path: '/ask-data',
+  getParentRoute: () => ShellRoute,
 } as any)
 const ShellBerandaRoute = ShellBerandaRouteImport.update({
   id: '/beranda',
@@ -33,30 +41,58 @@ const ShellChatRoute = ShellChatRouteImport.update({
   path: '/chat',
   getParentRoute: () => ShellRoute,
 } as any)
+const ShellDataIndexRoute = ShellDataIndexRouteImport.update({
+  id: '/data/',
+  path: '/data/',
+  getParentRoute: () => ShellRoute,
+} as any)
+const ShellDataDatasetIdRoute = ShellDataDatasetIdRouteImport.update({
+  id: '/data/$datasetId',
+  path: '/data/$datasetId',
+  getParentRoute: () => ShellRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/ask-data': typeof ShellAskDataRoute
   '/beranda': typeof ShellBerandaRoute
   '/chat': typeof ShellChatRoute
+  '/data/$datasetId': typeof ShellDataDatasetIdRoute
+  '/data/': typeof ShellDataIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/ask-data': typeof ShellAskDataRoute
   '/beranda': typeof ShellBerandaRoute
   '/chat': typeof ShellChatRoute
+  '/data/$datasetId': typeof ShellDataDatasetIdRoute
+  '/data': typeof ShellDataIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_shell': typeof ShellRouteWithChildren
+  '/_shell/ask-data': typeof ShellAskDataRoute
   '/_shell/beranda': typeof ShellBerandaRoute
   '/_shell/chat': typeof ShellChatRoute
+  '/_shell/data/$datasetId': typeof ShellDataDatasetIdRoute
+  '/_shell/data/': typeof ShellDataIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/beranda' | '/chat'
+  fullPaths:
+    '/' | '/ask-data' | '/beranda' | '/chat' | '/data/$datasetId' | '/data/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/beranda' | '/chat'
-  id: '__root__' | '/' | '/_shell' | '/_shell/beranda' | '/_shell/chat'
+  to: '/' | '/ask-data' | '/beranda' | '/chat' | '/data/$datasetId' | '/data'
+  id:
+    | '__root__'
+    | '/'
+    | '/_shell'
+    | '/_shell/ask-data'
+    | '/_shell/beranda'
+    | '/_shell/chat'
+    | '/_shell/data/$datasetId'
+    | '/_shell/data/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -80,6 +116,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ShellRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_shell/ask-data': {
+      id: '/_shell/ask-data'
+      path: '/ask-data'
+      fullPath: '/ask-data'
+      preLoaderRoute: typeof ShellAskDataRouteImport
+      parentRoute: typeof ShellRoute
+    }
     '/_shell/beranda': {
       id: '/_shell/beranda'
       path: '/beranda'
@@ -94,17 +137,37 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ShellChatRouteImport
       parentRoute: typeof ShellRoute
     }
+    '/_shell/data/': {
+      id: '/_shell/data/'
+      path: '/data'
+      fullPath: '/data/'
+      preLoaderRoute: typeof ShellDataIndexRouteImport
+      parentRoute: typeof ShellRoute
+    }
+    '/_shell/data/$datasetId': {
+      id: '/_shell/data/$datasetId'
+      path: '/data/$datasetId'
+      fullPath: '/data/$datasetId'
+      preLoaderRoute: typeof ShellDataDatasetIdRouteImport
+      parentRoute: typeof ShellRoute
+    }
   }
 }
 
 interface ShellRouteChildren {
+  ShellAskDataRoute: typeof ShellAskDataRoute
   ShellBerandaRoute: typeof ShellBerandaRoute
   ShellChatRoute: typeof ShellChatRoute
+  ShellDataDatasetIdRoute: typeof ShellDataDatasetIdRoute
+  ShellDataIndexRoute: typeof ShellDataIndexRoute
 }
 
 const ShellRouteChildren: ShellRouteChildren = {
+  ShellAskDataRoute: ShellAskDataRoute,
   ShellBerandaRoute: ShellBerandaRoute,
   ShellChatRoute: ShellChatRoute,
+  ShellDataDatasetIdRoute: ShellDataDatasetIdRoute,
+  ShellDataIndexRoute: ShellDataIndexRoute,
 }
 
 const ShellRouteWithChildren = ShellRoute._addFileChildren(ShellRouteChildren)
