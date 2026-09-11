@@ -6,8 +6,9 @@
 
 /*
  * BPS AI Assistant design system.
- * Palette derived from the BPS identity: Blue (primary), Orange (secondary),
- * Green (positive). Neutrals carry 70-80% of the surface area.
+ * Default: Dark mode with warm Orange identity (BPS's signature color).
+ * Light mode available via removing .dark class from <html>.
+ * Orange (primary), Blue (accent), Green (positive).
  */
 
 @theme inline {
@@ -67,93 +68,120 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 
-  --shadow-soft: 0 1px 2px oklch(0.3 0.04 258 / 0.05), 0 8px 24px oklch(0.3 0.04 258 / 0.06);
-  --shadow-lift: 0 2px 4px oklch(0.3 0.04 258 / 0.06), 0 16px 40px oklch(0.3 0.04 258 / 0.1);
+  --shadow-soft: 0 1px 2px oklch(0.1 0.02 50 / 0.15), 0 8px 24px oklch(0.1 0.02 50 / 0.1);
+  --shadow-lift: 0 2px 4px oklch(0.1 0.02 50 / 0.12), 0 16px 40px oklch(0.1 0.02 50 / 0.16);
 }
 
+/*
+ * ── Dark mode (DEFAULT) ──
+ * Warm dark theme with BPS Orange as the primary/accent color.
+ * The bps-blue tokens are remapped to orange hues so every component
+ * that uses bg-bps-blue, text-bps-blue etc. automatically shows orange.
+ */
 :root {
   --radius: 0.75rem;
 
-  --bps-blue: oklch(0.46 0.16 259);
-  --bps-blue-soft: oklch(0.95 0.03 259);
-  --bps-blue-deep: oklch(0.28 0.09 262);
-  --bps-orange: oklch(0.72 0.17 57);
-  --bps-orange-soft: oklch(0.96 0.04 70);
+  /* BPS Identity Colors (always available) */
+  --bps-orange: oklch(0.75 0.16 55);
+  --bps-orange-soft: oklch(0.28 0.06 50);
   --bps-green: oklch(0.62 0.14 156);
-  --bps-green-soft: oklch(0.95 0.04 156);
+  --bps-green-soft: oklch(0.26 0.05 156);
 
-  --background: oklch(0.985 0.002 258);
-  --foreground: oklch(0.22 0.02 260);
+  /* bps-blue tokens REMAPPED to warm orange for the dark theme */
+  --bps-blue: oklch(0.75 0.16 55); /* orange primary */
+  --bps-blue-soft: oklch(0.24 0.05 50); /* subtle warm bg */
+  --bps-blue-deep: oklch(0.92 0.06 60); /* light orange text on dark */
+
+  /* Core palette - warm dark */
+  --background: oklch(0.145 0.012 50);
+  --foreground: oklch(0.95 0.005 60);
+  --surface: oklch(0.185 0.015 50);
+  --surface-2: oklch(0.215 0.018 50);
+
+  --card: oklch(0.185 0.015 50);
+  --card-foreground: oklch(0.95 0.005 60);
+  --popover: oklch(0.185 0.015 50);
+  --popover-foreground: oklch(0.95 0.005 60);
+
+  --primary: var(--bps-blue);
+  --primary-foreground: oklch(0.13 0.01 50);
+  --secondary: oklch(0.22 0.018 50);
+  --secondary-foreground: oklch(0.93 0.005 60);
+  --muted: oklch(0.22 0.015 50);
+  --muted-foreground: oklch(0.65 0.02 55);
+  --accent: oklch(0.25 0.025 50);
+  --accent-foreground: oklch(0.95 0.005 60);
+  --destructive: oklch(0.58 0.2 25);
+  --destructive-foreground: oklch(0.99 0 0);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 12%);
+  --ring: var(--bps-blue);
+
+  --chart-1: var(--bps-orange);
+  --chart-2: oklch(0.55 0.14 259);
+  --chart-3: var(--bps-green);
+  --chart-4: oklch(0.6 0.08 50);
+  --chart-5: oklch(0.75 0.01 50);
+
+  --sidebar: oklch(0.16 0.013 50);
+  --sidebar-foreground: oklch(0.9 0.005 60);
+  --sidebar-primary: var(--bps-blue);
+  --sidebar-primary-foreground: oklch(0.13 0.01 50);
+  --sidebar-accent: oklch(0.24 0.05 50);
+  --sidebar-accent-foreground: oklch(0.92 0.06 60);
+  --sidebar-border: oklch(1 0 0 / 8%);
+  --sidebar-ring: var(--bps-blue);
+}
+
+/*
+ * ── Light mode ──
+ * Clean white theme with BPS Orange as the primary/accent.
+ * bps-blue tokens also show orange to stay consistent.
+ */
+.light {
+  --bps-blue: oklch(0.65 0.18 52); /* slightly deeper for contrast on white */
+  --bps-blue-soft: oklch(0.96 0.04 55); /* warm tinted bg */
+  --bps-blue-deep: oklch(0.35 0.1 50); /* dark orange for text */
+  --bps-orange-soft: oklch(0.96 0.04 55);
+
+  --background: oklch(0.985 0.003 60);
+  --foreground: oklch(0.2 0.02 50);
   --surface: oklch(1 0 0);
-  --surface-2: oklch(0.972 0.003 258);
+  --surface-2: oklch(0.97 0.004 55);
 
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.22 0.02 260);
+  --card-foreground: oklch(0.2 0.02 50);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.22 0.02 260);
+  --popover-foreground: oklch(0.2 0.02 50);
 
   --primary: var(--bps-blue);
   --primary-foreground: oklch(0.99 0 0);
-  --secondary: oklch(0.96 0.004 258);
-  --secondary-foreground: oklch(0.3 0.02 260);
-  --muted: oklch(0.965 0.004 258);
-  --muted-foreground: oklch(0.53 0.02 258);
-  --accent: oklch(0.955 0.008 258);
-  --accent-foreground: oklch(0.28 0.03 260);
+  --secondary: oklch(0.96 0.005 55);
+  --secondary-foreground: oklch(0.3 0.02 50);
+  --muted: oklch(0.965 0.005 55);
+  --muted-foreground: oklch(0.5 0.025 50);
+  --accent: oklch(0.955 0.01 55);
+  --accent-foreground: oklch(0.3 0.03 50);
   --destructive: oklch(0.58 0.2 25);
   --destructive-foreground: oklch(0.99 0 0);
-  --border: oklch(0.915 0.005 258);
-  --input: oklch(0.9 0.006 258);
+  --border: oklch(0.91 0.006 55);
+  --input: oklch(0.89 0.008 55);
   --ring: var(--bps-blue);
 
-  --chart-1: var(--bps-blue);
-  --chart-2: var(--bps-orange);
+  --chart-1: var(--bps-orange);
+  --chart-2: oklch(0.46 0.16 259);
   --chart-3: var(--bps-green);
-  --chart-4: oklch(0.66 0.06 258);
-  --chart-5: oklch(0.8 0.01 258);
+  --chart-4: oklch(0.66 0.06 55);
+  --chart-5: oklch(0.8 0.01 55);
 
   --sidebar: oklch(1 0 0);
-  --sidebar-foreground: oklch(0.3 0.02 260);
+  --sidebar-foreground: oklch(0.3 0.02 50);
   --sidebar-primary: var(--bps-blue);
   --sidebar-primary-foreground: oklch(0.99 0 0);
   --sidebar-accent: var(--bps-blue-soft);
   --sidebar-accent-foreground: var(--bps-blue-deep);
-  --sidebar-border: oklch(0.92 0.005 258);
+  --sidebar-border: oklch(0.92 0.005 55);
   --sidebar-ring: var(--bps-blue);
-}
-
-.dark {
-  --background: oklch(0.19 0.02 262);
-  --foreground: oklch(0.96 0.004 258);
-  --surface: oklch(0.23 0.022 262);
-  --surface-2: oklch(0.26 0.024 262);
-
-  --bps-blue: oklch(0.62 0.15 259);
-  --bps-blue-soft: oklch(0.3 0.05 259);
-  --bps-blue-deep: oklch(0.85 0.05 259);
-  --bps-orange-soft: oklch(0.32 0.06 60);
-  --bps-green-soft: oklch(0.3 0.05 156);
-
-  --card: oklch(0.23 0.022 262);
-  --card-foreground: oklch(0.96 0.004 258);
-  --popover: oklch(0.23 0.022 262);
-  --popover-foreground: oklch(0.96 0.004 258);
-  --primary: var(--bps-blue);
-  --primary-foreground: oklch(0.16 0.02 262);
-  --secondary: oklch(0.27 0.024 262);
-  --secondary-foreground: oklch(0.95 0.004 258);
-  --muted: oklch(0.27 0.024 262);
-  --muted-foreground: oklch(0.7 0.02 258);
-  --accent: oklch(0.29 0.028 262);
-  --accent-foreground: oklch(0.96 0.004 258);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 14%);
-
-  --sidebar: oklch(0.21 0.022 262);
-  --sidebar-foreground: oklch(0.93 0.004 258);
-  --sidebar-accent: oklch(0.3 0.05 259);
-  --sidebar-accent-foreground: oklch(0.93 0.03 259);
-  --sidebar-border: oklch(1 0 0 / 10%);
 }
 
 @layer base {
@@ -265,7 +293,7 @@
 }
 
 .shimmer-line {
-  background: linear-gradient(90deg, var(--muted) 25%, oklch(0.92 0.005 258) 50%, var(--muted) 75%);
+  background: linear-gradient(90deg, var(--muted) 25%, oklch(0.3 0.02 50) 50%, var(--muted) 75%);
   background-size: 800px 100%;
   animation: bps-shimmer 1.8s ease-in-out infinite;
   border-radius: 6px;

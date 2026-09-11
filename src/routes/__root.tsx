@@ -87,8 +87,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:title", content: "BPS AI Assistant" },
       {
         property: "og:description",
-        content:
-          "AI Work Assistant untuk pegawai BPS.",
+        content: "AI Work Assistant untuk pegawai BPS.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -122,7 +121,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="id">
+    <html lang="id" className="dark">
       <head>
         <HeadContent />
       </head>

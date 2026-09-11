@@ -11,6 +11,8 @@ import {
   Mic,
   Search,
   Bell,
+  Sun,
+  Moon,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -28,6 +30,7 @@ import { BpsMark } from "@/components/bps-logo";
 import { DemoBadge, SourceCard, StatisticCard, TrustNote } from "@/components/common";
 import { ChartCard, GrowthLineChart, MoversBarChart, PovertyAreaChart } from "@/components/charts";
 import { cn } from "@/lib/utils";
+import { useTheme } from "@/hooks/use-theme";
 import { answerData, quickPromptAnswers } from "./mock-engine";
 import type { AiAnswer } from "./mock-engine";
 import type { ChatMessage } from "@/hooks/use-chat";
@@ -78,6 +81,8 @@ export function ChatWorkspace({
   const endRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  const { theme, toggle: toggleTheme } = useTheme();
+
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [messages, stage]);
@@ -113,6 +118,19 @@ export function ChatWorkspace({
           <p className="text-[12px] text-muted-foreground">AI Assistant • Internal Workspace</p>
         </div>
         <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-9 w-9"
+            onClick={toggleTheme}
+            title={theme === "dark" ? "Mode Terang" : "Mode Gelap"}
+          >
+            {theme === "dark" ? (
+              <Sun className="h-4 w-4 text-bps-blue" />
+            ) : (
+              <Moon className="h-4 w-4" />
+            )}
+          </Button>
           <Button
             variant="ghost"
             size="icon"
