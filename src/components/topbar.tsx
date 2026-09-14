@@ -1,16 +1,16 @@
-import { useEffect, useState } from "react";
+import {
+    CommandDialog,
+    CommandEmpty,
+    CommandGroup,
+    CommandInput,
+    CommandItem,
+    CommandList,
+} from "@/components/ui/command";
+import { SidebarTrigger } from "@/components/ui/sidebar";
+import { conversations, datasets, documents } from "@/lib/mock-data";
 import { useNavigate } from "@tanstack/react-router";
 import { Search } from "lucide-react";
-import { SidebarTrigger } from "@/components/ui/sidebar";
-import {
-  CommandDialog,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
-import { conversations, datasets, documents } from "@/lib/mock-data";
+import { useEffect, useState } from "react";
 
 const insights = [
   { id: "trend-penduduk", title: "Pertumbuhan penduduk meningkat" },

@@ -1,5 +1,12 @@
-import { Plus, Settings, User, LogOut, ChevronDown } from "lucide-react";
-import { useNavigate } from "@tanstack/react-router";
+import { BpsWordmark } from "@/components/bps-logo";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Sidebar,
   SidebarContent,
@@ -13,16 +20,9 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { BpsWordmark } from "@/components/bps-logo";
 import { cn } from "@/lib/utils";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { useNavigate } from "@tanstack/react-router";
+import { ChevronDown, LogOut, Plus, Settings, User } from "lucide-react";
 
 type HistoryItem = {
   id: string;

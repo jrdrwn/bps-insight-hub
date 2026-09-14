@@ -1,39 +1,38 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  Check,
-  Copy,
-  MoreHorizontal,
-  Paperclip,
-  RefreshCw,
-  SendHorizontal,
-  ThumbsDown,
-  ThumbsUp,
-  Mic,
-  Search,
-  Sun,
-  Moon,
-} from "lucide-react";
-import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { BpsMark } from "@/components/bps-logo";
-import { DemoBadge, SourceCard, StatisticCard, TrustNote } from "@/components/common";
 import { ChartCard, GrowthLineChart, MoversBarChart, PovertyAreaChart } from "@/components/charts";
-import { cn } from "@/lib/utils";
-import { useTheme } from "@/hooks/use-theme";
+import { DemoBadge, SourceCard, StatisticCard, TrustNote } from "@/components/common";
+import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { answerData, quickPromptAnswers } from "./mock-engine";
-import type { AiAnswer } from "./mock-engine";
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table";
+import { Textarea } from "@/components/ui/textarea";
 import type { ChatMessage } from "@/hooks/use-chat";
+import { useTheme } from "@/hooks/use-theme";
+import { cn } from "@/lib/utils";
+import {
+    Check,
+    Copy,
+    Mic,
+    Moon,
+    MoreHorizontal,
+    Paperclip,
+    RefreshCw,
+    Search,
+    SendHorizontal,
+    Sun,
+    ThumbsDown,
+    ThumbsUp,
+} from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
+import type { AiAnswer } from "./mock-engine";
+import { answerData } from "./mock-engine";
 
 /* ─── Quick Prompt Definitions ─── */
 const quickPrompts = [
@@ -378,7 +377,7 @@ function UserMessage({ id, text, index, searchQuery }: { id: string; text: strin
     if (!searchQuery) return t;
     const regex = new RegExp(`(${searchQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
     const parts = t.split(regex);
-    return parts.map((part, i) => 
+    return parts.map((part, i) =>
       regex.test(part) ? (
         <span key={i} className="bg-yellow-200/50 text-yellow-900 dark:bg-yellow-800/50 dark:text-yellow-200 rounded px-0.5">{part}</span>
       ) : part
@@ -403,7 +402,7 @@ function AssistantMessage({ id, answer, index, searchQuery }: { id: string; answ
     if (!searchQuery) return t;
     const regex = new RegExp(`(${searchQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
     const parts = t.split(regex);
-    return parts.map((part, i) => 
+    return parts.map((part, i) =>
       regex.test(part) ? (
         <span key={i} className="bg-yellow-200/50 text-yellow-900 dark:bg-yellow-800/50 dark:text-yellow-200 rounded px-0.5">{part}</span>
       ) : part
