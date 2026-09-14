@@ -10,7 +10,6 @@ import {
   ThumbsUp,
   Mic,
   Search,
-  Bell,
   Sun,
   Moon,
 } from "lucide-react";
@@ -201,22 +200,6 @@ export function ChatWorkspace({
           >
             <Search className="h-4 w-4" />
           </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className={cn(
-              "transition-all duration-300",
-              isCompact ? "h-7 w-7" : "h-9 w-9",
-            )}
-            onClick={() => toast("Demo: tidak ada notifikasi baru.")}
-          >
-            <Bell className="h-4 w-4" />
-          </Button>
-          {!isCompact && (
-            <div className="ml-1 hidden h-8 w-8 items-center justify-center rounded-lg bg-bps-blue text-xs font-semibold text-primary-foreground sm:flex">
-              PB
-            </div>
-          )}
         </div>
       </header>
 

@@ -1,9 +1,7 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "@tanstack/react-router";
-import { Bell, LogOut, Search } from "lucide-react";
-import { toast } from "sonner";
+import { useNavigate } from "@tanstack/react-router";
+import { Search } from "lucide-react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { Button } from "@/components/ui/button";
 import {
   CommandDialog,
   CommandEmpty,
@@ -13,14 +11,6 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { conversations, datasets, documents } from "@/lib/mock-data";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 const insights = [
   { id: "trend-penduduk", title: "Pertumbuhan penduduk meningkat" },
@@ -59,41 +49,6 @@ export function Topbar() {
         <span className="truncate">Cari dataset, dokumen, percakapan...</span>
         <kbd className="ml-auto hidden rounded border px-1.5 py-0.5 text-[10px] sm:inline">⌘K</kbd>
       </button>
-
-      <div className="ml-auto flex items-center gap-1">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-9 w-9"
-          onClick={() => toast("Demo: tidak ada notifikasi baru.")}
-        >
-          <Bell className="h-4 w-4" />
-        </Button>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button className="flex h-8 w-8 items-center justify-center rounded-lg bg-bps-blue text-xs font-semibold text-primary-foreground">
-              PB
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-52">
-            <DropdownMenuLabel>
-              <div className="text-sm font-medium">Pegawai BPS</div>
-              <div className="text-xs font-normal text-muted-foreground">
-                pegawai@bps.go.id
-              </div>
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <Link to="/pengaturan">Pengaturan</Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link to="/">
-                <LogOut className="mr-2 h-4 w-4" /> Keluar
-              </Link>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
 
       <CommandDialog open={open} onOpenChange={setOpen}>
         <CommandInput placeholder="Cari: kemiskinan Kalimantan Tengah..." />
