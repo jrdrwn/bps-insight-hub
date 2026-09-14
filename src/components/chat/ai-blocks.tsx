@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 import katex from "katex";
-import { Download, ExternalLink, FileText, Image as ImageIcon, Loader2, Play } from "lucide-react";
+import { Check, Copy, Download, ExternalLink, FileText, Image as ImageIcon, Loader2, Play } from "lucide-react";
 import { useMemo, useState } from "react";
 import {
     Area,
@@ -468,8 +468,23 @@ function EmbedRenderer({ embedType, url, title }: { embedType: string; url: stri
 
 // ── Table Renderer ──
 function TableRenderer({ headers, rows }: { headers: string[]; rows: string[][] }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyTable = () => {
+    const text = [headers.join("\t"), ...rows.map((r) => r.join("\t"))].join("\n");
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
+
   return (
     <div className="panel overflow-hidden p-0">
+      <div className="flex items-center justify-between border-b bg-muted/50 px-4 py-2">
+        <span className="text-[12px] font-medium text-muted-foreground">Tabel</span>
+        <button onClick={handleCopyTable} className="flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
+          {copied ? <><Check className="h-3 w-3" /> Disalin</> : <><Copy className="h-3 w-3" /> Salin</>}
+        </button>
+      </div>
       <div className="overflow-x-auto">
         <table className="w-full text-[13px]">
           <thead>
@@ -495,6 +510,29 @@ function TableRenderer({ headers, rows }: { headers: string[]; rows: string[][] 
 }
 
 // ── Inline Markdown ──
+function CopyableCode({ children }: { children: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <code
+      className="group/code relative inline-flex items-center gap-1 rounded bg-muted px-1 py-0.5 pr-5 text-[13px]"
+    >
+      {children}
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          navigator.clipboard.writeText(children);
+          setCopied(true);
+          setTimeout(() => setCopied(false), 1500);
+        }}
+        className="absolute right-0.5 top-0.5 hidden rounded p-0.5 text-muted-foreground hover:text-foreground group-hover/code:inline-flex"
+        title="Salin kode"
+      >
+        {copied ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
+      </button>
+    </code>
+  );
+}
+
 function inlineMd(text: string): React.ReactNode {
   const parts = text.split(/(\[.*?\]\(.*?\)|\*\*.*?\*\*|`.*?`|\*.*?\*)/g);
   return parts.map((part, i) => {
@@ -523,7 +561,7 @@ function inlineMd(text: string): React.ReactNode {
       return <em key={i}>{part.slice(1, -1)}</em>;
     }
     if (part.startsWith("`") && part.endsWith("`")) {
-      return <code key={i} className="rounded bg-muted px-1 py-0.5 text-[13px]">{part.slice(1, -1)}</code>;
+      return <CopyableCode key={i}>{part.slice(1, -1)}</CopyableCode>;
     }
     return part;
   });

@@ -292,7 +292,15 @@ Gunakan LaTeX:
 - Gunakan chart:line untuk tren waktu, chart:bar untuk perbandingan, chart:pie untuk proporsi
 - Sertakan file/dokumen referensi khi ada
 - Gunakan markdown **bold**, *italic*, heading, dan list untuk teks
-- Jawaban harus informatif, terstruktur, dan mudah dipahami`;
+- Jawaban harus informatif, terstruktur, dan mudah dipahami
+
+### Saran Pertanyaan Lanjutan
+Di AKHIR setiap jawaban, tambahkan 3 pertanyaan lanjutan yang relevan untuk membantu pengguna menjelajahi lebih dalam.
+Format: baris terpisah, diawali tanda `- `, minimal 3 saran.
+Contoh:
+- Tampilkan tren pertumbuhan ekonomi dalam chart
+- Bandingkan dengan provinsi lain
+- Buatkan ringkasan eksekutif data ini`;
 
 function buildMessages(body: {
   message?: string;

@@ -6,11 +6,12 @@ export type AiAnswer = {
   blocks: string[];
   insight?: string;
   sources: { kind: string; title: string; meta: string }[];
+  suggestions?: string[];
 };
 
 export type ChatMessage =
-  | { id: string; role: "user"; text: string; attachment?: { name: string; type: string } }
-  | { id: string; role: "assistant"; answer: AiAnswer };
+  | { id: string; role: "user"; text: string; attachment?: { name: string; type: string }; createdAt: number }
+  | { id: string; role: "assistant"; answer: AiAnswer; createdAt: number };
 
 export type ConversationItem = {
   id: string;
@@ -19,6 +20,23 @@ export type ConversationItem = {
 };
 
 const uid = () => `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+
+/** Extract follow-up suggestions from AI text (lines starting with `- ` at the end) */
+function extractSuggestions(text: string): { cleanText: string; suggestions: string[] } {
+  const lines = text.split("\n");
+  const suggestions: string[] = [];
+  let i = lines.length - 1;
+
+  // Walk backwards from end, collect `- ` prefixed lines
+  while (i >= 0 && /^\s*-\s+/.test(lines[i])) {
+    suggestions.unshift(lines[i].replace(/^\s*-\s+/, "").trim());
+    i--;
+  }
+
+  // Remove the suggestion lines from text
+  const cleanText = suggestions.length > 0 ? lines.slice(0, i + 1).join("\n").trimEnd() : text;
+  return { cleanText, suggestions };
+}
 
 /**
  * Custom hook to manage the BPS AI chat state.
@@ -78,6 +96,7 @@ export function useChat() {
                 id: aiId,
                 role: "assistant",
                 answer: { text: "", blocks: [], sources: [] },
+                createdAt: Date.now(),
               };
               setMessages((prev) => [...prev, aiMsg]);
               setStage(null); // Remove thinking block, streaming visible now
@@ -94,6 +113,18 @@ export function useChat() {
         }
 
         setConversationId(convId);
+
+        // Extract suggestions from final text
+        if (aiId) {
+          const { cleanText, suggestions } = extractSuggestions(fullText);
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === aiId
+                ? { ...m, answer: { ...m.answer, text: cleanText, suggestions } }
+                : m,
+            ),
+          );
+        }
 
         // Track conversation in history
         setConversationHistory((prev) => {

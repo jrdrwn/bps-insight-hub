@@ -21,7 +21,6 @@ import {
     Copy,
     Mic,
     Moon,
-    MoreHorizontal,
     Paperclip,
     RefreshCw,
     Search,
@@ -331,18 +330,28 @@ export function ChatWorkspace({
 
             {messages.map((m, i) =>
               m.role === "user" ? (
-                <UserMessage key={m.id} id={m.id} text={m.text} index={i} searchQuery={searchQuery} />
+                <UserMessage key={m.id} id={m.id} text={m.text} index={i} searchQuery={searchQuery} createdAt={m.createdAt} />
               ) : (
-                <AssistantMessage key={m.id} id={m.id} answer={m.answer} index={i} searchQuery={searchQuery} />
+                <AssistantMessage key={m.id} id={m.id} answer={m.answer} index={i} searchQuery={searchQuery} onSend={handleSend} createdAt={m.createdAt} />
               ),
             )}
 
             {stage !== null && (
-              <div className="animate-fade-in flex items-center gap-2 pl-11 text-[13px] text-muted-foreground">
-                <span className="typing-dot" />
-                <span className="typing-dot" style={{ animationDelay: "0.15s" }} />
-                <span className="typing-dot" style={{ animationDelay: "0.3s" }} />
-                <span className="ml-1">{loadingStageText}</span>
+              <div className="animate-fade-in flex items-center gap-3 pl-11">
+                <div className="flex items-center gap-1.5">
+                  <span className="typing-dot" />
+                  <span className="typing-dot" style={{ animationDelay: "0.15s" }} />
+                  <span className="typing-dot" style={{ animationDelay: "0.3s" }} />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[13px] font-medium text-foreground">{loadingStageText}</span>
+                  <span className="text-[11px] text-muted-foreground">{stage === 0 ? 'Mengirim ke AI...' : stage === 1 ? 'Memproses permintaan...' : 'Menyusun jawaban...'}</span>
+                </div>
+                <div className="ml-2 flex gap-1">
+                  {[0, 1, 2].map((s) => (
+                    <div key={s} className={`h-1.5 rounded-full transition-all duration-500 ${s <= stage ? 'w-6 bg-bps-blue' : 'w-1.5 bg-muted'}`} />
+                  ))}
+                </div>
               </div>
             )}
 
@@ -378,6 +387,12 @@ export function ChatWorkspace({
 
 /* ─── Welcome State ─── */
 function WelcomeState({ onQuickPrompt }: { onQuickPrompt: (id: string) => void }) {
+  const steps = [
+    { num: "1", label: "Pilih topik", desc: "Mulai dengan pertanyaan atau topik pekerjaan" },
+    { num: "2", label: "Analisis data", desc: "AI menganalisis dan menyajikan hasilnya" },
+    { num: "3", label: "Jelajahi lebih dalam", desc: "Klik saran pertanyaan untuk eksplorasi lanjutan" },
+  ];
+
   return (
     <div className="flex flex-col items-center py-12 text-center">
       <BpsMark className="h-12 w-12 opacity-80" />
@@ -391,6 +406,25 @@ function WelcomeState({ onQuickPrompt }: { onQuickPrompt: (id: string) => void }
         Tanyakan tentang data, statistik, metodologi, atau pekerjaan Anda.
       </p>
 
+      {/* Flow Steps */}
+      <div className="mt-8 flex items-center gap-3 sm:gap-6">
+        {steps.map((step, i) => (
+          <div key={step.num} className="flex items-center gap-2 sm:gap-3">
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-bps-blue/10 text-[12px] font-bold text-bps-blue">
+              {step.num}
+            </div>
+            <div className="text-left">
+              <div className="text-[13px] font-medium text-foreground">{step.label}</div>
+              <div className="hidden text-[11px] text-muted-foreground sm:block">{step.desc}</div>
+            </div>
+            {i < steps.length - 1 && (
+              <div className="ml-1 hidden h-px w-6 bg-border sm:block" />
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Quick Prompts */}
       <div className="mt-8 grid w-full max-w-2xl grid-cols-1 gap-3 sm:grid-cols-2">
         {quickPrompts.map((prompt, i) => (
           <button
@@ -416,7 +450,10 @@ function WelcomeState({ onQuickPrompt }: { onQuickPrompt: (id: string) => void }
 }
 
 /* ─── User Message ─── */
-function UserMessage({ id, text, index, searchQuery }: { id: string; text: string; index: number; searchQuery?: string }) {
+function UserMessage({ id, text, index, searchQuery, createdAt }: { id: string; text: string; index: number; searchQuery?: string; createdAt: number }) {
+  const [hovered, setHovered] = useState(false);
+  const [copied, setCopied] = useState(false);
+
   const highlightText = (t: string) => {
     if (!searchQuery) return t;
     const regex = new RegExp(`(${searchQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
@@ -429,16 +466,26 @@ function UserMessage({ id, text, index, searchQuery }: { id: string; text: strin
   };
 
   return (
-    <div id={`msg-${id}`} className="animate-msg-in flex justify-end scroll-mt-20" style={{ animationDelay: `${index * 50}ms` }}>
-      <div className="max-w-[80%] rounded-2xl rounded-br-md bg-bps-blue-soft/80 px-4 py-2.5 text-[14px] leading-relaxed text-bps-blue-deep">
-        {highlightText(text)}
+    <div id={`msg-${id}`} className="animate-msg-in flex justify-end scroll-mt-20" style={{ animationDelay: `${index * 50}ms` }}
+      onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
+      <div className="flex items-end gap-2">
+        <div className="max-w-[80%] rounded-2xl rounded-br-md bg-bps-blue-soft/80 px-4 py-2.5 text-[14px] leading-relaxed text-bps-blue-deep">
+          {highlightText(text)}
+        </div>
+        {hovered && (
+          <button onClick={() => { navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
+            className="shrink-0 rounded-md border bg-background p-1.5 text-muted-foreground shadow-sm transition-all hover:text-foreground" title="Salin">
+            {copied ? <Check className="h-3.5 w-3.5 text-green-500" /> : <Copy className="h-3.5 w-3.5" />}
+          </button>
+        )}
       </div>
+      <span className="mt-1 text-right text-[10px] text-muted-foreground/60">{new Date(createdAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}</span>
     </div>
   );
 }
 
 /* ─── Assistant Message ─── */
-function AssistantMessage({ id, answer, index, searchQuery }: { id: string; answer: AiAnswer; index: number; searchQuery?: string }) {
+function AssistantMessage({ id, answer, index, searchQuery, onSend, createdAt }: { id: string; answer: AiAnswer; index: number; searchQuery?: string; onSend?: (text: string) => void; createdAt: number }) {
   const [copied, setCopied] = useState(false);
   const [vote, setVote] = useState<"up" | "down" | null>(null);
 
@@ -554,13 +601,37 @@ function AssistantMessage({ id, answer, index, searchQuery }: { id: string; answ
             label="Regenerate"
             onClick={() => toast("Demo: jawaban akan dibuat ulang.")}
           />
-          <ActionBtn
-            icon={MoreHorizontal}
-            label="More"
-            onClick={() => toast("Demo: opsi tambahan.")}
-          />
+        </div>
+
+        {/* Follow-up Suggestions */}
+        {answer.suggestions && answer.suggestions.length > 0 && onSend && (
+          <FollowUpSuggestions suggestions={answer.suggestions} onSend={onSend} />
+        )}
+
+        {/* Timestamp */}
+        <div className="text-[10px] text-muted-foreground/60">
+          {new Date(createdAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
         </div>
       </div>
+    </div>
+  );
+}
+
+/* ─── Follow-up Suggestions ─── */
+function FollowUpSuggestions({ suggestions, onSend }: { suggestions: string[]; onSend: (text: string) => void }) {
+  return (
+    <div className="flex flex-wrap gap-2 pt-1">
+      {suggestions.map((s, i) => (
+        <button
+          key={i}
+          onClick={() => onSend(s)}
+          className="animate-card-in group flex items-center gap-1.5 rounded-lg border border-dashed bg-surface px-3 py-1.5 text-[13px] text-muted-foreground transition-all hover:border-bps-blue/40 hover:bg-bps-blue-soft/20 hover:text-bps-blue"
+          style={{ animationDelay: `${i * 60}ms` }}
+        >
+          <span className="opacity-50 group-hover:opacity-100">→</span>
+          <span>{s}</span>
+        </button>
+      ))}
     </div>
   );
 }
@@ -659,7 +730,7 @@ function Composer({
         </div>
         {!isCompact && (
           <p className="mt-2 text-center text-[11px] text-muted-foreground">
-            AI dapat membuat kesalahan. Periksa kembali informasi penting dengan sumber resmi BPS.
+            <kbd className="rounded border bg-muted px-1 py-0.5 text-[10px]">Enter</kbd> kirim · <kbd className="rounded border bg-muted px-1 py-0.5 text-[10px]">Shift+Enter</kbd> baris baru · AI dapat membuat kesalahan
           </p>
         )}
       </div>
