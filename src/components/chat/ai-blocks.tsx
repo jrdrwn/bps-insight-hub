@@ -1,24 +1,24 @@
-import { useMemo, useState } from "react";
-import katex from "katex";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Legend,
-  Line,
-  LineChart,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-  Area,
-  AreaChart,
-  Cell,
-} from "recharts";
-import { Download, ExternalLink, FileText, Image as ImageIcon, Play, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import katex from "katex";
+import { Download, ExternalLink, FileText, Image as ImageIcon, Loader2, Play } from "lucide-react";
+import { useMemo, useState } from "react";
+import {
+    Area,
+    AreaChart,
+    Bar,
+    BarChart,
+    CartesianGrid,
+    Cell,
+    Legend,
+    Line,
+    LineChart,
+    Pie,
+    PieChart,
+    ResponsiveContainer,
+    Tooltip,
+    XAxis,
+    YAxis,
+} from "recharts";
 
 // ── Types ──
 type AiBlock =

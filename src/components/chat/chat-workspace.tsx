@@ -32,8 +32,8 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { answerData } from "./mock-engine";
 import { AiBlockRenderer } from "./ai-blocks";
+import { answerData } from "./mock-engine";
 
 /* ─── Quick Prompt Definitions ─── */
 const quickPrompts = [
