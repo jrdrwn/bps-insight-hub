@@ -35,7 +35,7 @@ function ShellLayout() {
   return (
     <ChatContext.Provider value={chat}>
       <SidebarProvider>
-        <div className="flex min-h-screen w-full">
+        <div className="flex h-screen w-full overflow-hidden">
           <AppSidebar
             onNewChat={handleNewChat}
             onSelectConversation={handleSelectConversation}
@@ -43,7 +43,7 @@ function ShellLayout() {
           />
           <SidebarInset className="min-w-0">
             {!isChatPage && <Topbar />}
-            <main className="flex min-h-0 flex-1 flex-col">
+            <main className="flex min-h-0 flex-1 flex-col overflow-hidden">
               <Outlet />
             </main>
           </SidebarInset>

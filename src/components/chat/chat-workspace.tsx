@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Check,
   Copy,
@@ -79,8 +79,12 @@ export function ChatWorkspace({
   const [input, setInput] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isCompact, setIsCompact] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const lastScrollTop = useRef(0);
+  const scrollTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const { theme, toggle: toggleTheme } = useTheme();
 
@@ -88,10 +92,42 @@ export function ChatWorkspace({
     endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [messages, stage]);
 
+  const handleScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+
+    const scrollTop = el.scrollTop;
+    const scrollHeight = el.scrollHeight;
+    const clientHeight = el.clientHeight;
+    const atTop = scrollTop <= 5;
+    const atBottom = scrollTop + clientHeight >= scrollHeight - 5;
+    const scrollingDown = scrollTop > lastScrollTop.current;
+
+    // Collapse header when scrolling down and not near edges
+    if (scrollingDown && !atTop && !atBottom && scrollTop > 40) {
+      setIsCompact(true);
+    } else if (!scrollingDown || atTop || atBottom) {
+      setIsCompact(false);
+    }
+
+    lastScrollTop.current = scrollTop;
+
+    // Expand again after scrolling stops
+    if (scrollTimeout.current) clearTimeout(scrollTimeout.current);
+    scrollTimeout.current = setTimeout(() => setIsCompact(false), 1200);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (scrollTimeout.current) clearTimeout(scrollTimeout.current);
+    };
+  }, []);
+
   const handleSend = (text?: string) => {
     const msg = (text ?? input).trim();
     if (!msg) return;
     setInput("");
+    setIsCompact(false);
     onSend(msg);
   };
 
@@ -113,19 +149,38 @@ export function ChatWorkspace({
   return (
     <div className="flex h-full min-h-0 flex-col bg-background">
       {/* ── Chat Header ── */}
-      <header className="flex flex-wrap items-center justify-between gap-3 border-b bg-surface/85 px-4 backdrop-blur">
+      <header
+        className={cn(
+          "flex flex-wrap items-center border-b bg-surface/85 backdrop-blur transition-all duration-300 ease-in-out",
+          isCompact ? "px-3 py-1.5 gap-2" : "justify-between gap-3 px-4 py-3",
+        )}
+      >
         <div className="flex min-w-0 items-center gap-2">
           <SidebarTrigger />
           <div className="min-w-0">
-            <h1 className="text-[15px] font-semibold tracking-tight">BPS AI Assistant</h1>
-            <p className="text-[12px] text-muted-foreground">AI Assistant • Internal Workspace</p>
+            <h1
+              className={cn(
+                "font-semibold tracking-tight transition-all duration-300",
+                isCompact ? "text-[13px]" : "text-[15px]",
+              )}
+            >
+              BPS AI Assistant
+            </h1>
+            {!isCompact && (
+              <p className="text-[12px] text-muted-foreground">
+                AI Assistant • Internal Workspace
+              </p>
+            )}
           </div>
         </div>
         <div className="flex items-center gap-1">
           <Button
             variant="ghost"
             size="icon"
-            className="h-9 w-9"
+            className={cn(
+              "transition-all duration-300",
+              isCompact ? "h-7 w-7" : "h-9 w-9",
+            )}
             onClick={toggleTheme}
             title={theme === "dark" ? "Mode Terang" : "Mode Gelap"}
           >
@@ -138,7 +193,10 @@ export function ChatWorkspace({
           <Button
             variant="ghost"
             size="icon"
-            className="h-9 w-9"
+            className={cn(
+              "transition-all duration-300",
+              isCompact ? "h-7 w-7" : "h-9 w-9",
+            )}
             onClick={() => setSearchOpen(!searchOpen)}
           >
             <Search className="h-4 w-4" />
@@ -146,43 +204,130 @@ export function ChatWorkspace({
           <Button
             variant="ghost"
             size="icon"
-            className="h-9 w-9"
+            className={cn(
+              "transition-all duration-300",
+              isCompact ? "h-7 w-7" : "h-9 w-9",
+            )}
             onClick={() => toast("Demo: tidak ada notifikasi baru.")}
           >
             <Bell className="h-4 w-4" />
           </Button>
-          <div className="ml-1 hidden h-8 w-8 items-center justify-center rounded-lg bg-bps-blue text-xs font-semibold text-primary-foreground sm:flex">
-            PB
-          </div>
+          {!isCompact && (
+            <div className="ml-1 hidden h-8 w-8 items-center justify-center rounded-lg bg-bps-blue text-xs font-semibold text-primary-foreground sm:flex">
+              PB
+            </div>
+          )}
         </div>
       </header>
 
       {/* ── Search Bar (collapsible) ── */}
       {searchOpen && (
-        <div className="border-b bg-surface px-6 py-2.5 animate-fade-up">
+        <div className="border-b bg-surface px-4 py-2.5 animate-fade-up sm:px-6">
           <div className="mx-auto max-w-3xl">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Cari dalam percakapan..."
-              className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:border-bps-blue"
-              autoFocus
-            />
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Cari dalam percakapan..."
+                className="w-full rounded-lg border bg-background py-2 pl-9 pr-3 text-sm outline-none focus:border-bps-blue"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === "Escape") {
+                    setSearchOpen(false);
+                    setSearchQuery("");
+                  }
+                }}
+              />
+            </div>
+
+            {/* Search Results — clickable to jump to the message */}
+            {searchQuery && (
+              <div className="mt-2">
+                {(() => {
+                  const matched = messages.filter((m) => {
+                    const text = m.role === "user" ? m.text : m.answer?.text || "";
+                    return text.toLowerCase().includes(searchQuery.toLowerCase());
+                  });
+                  const count = matched.length;
+
+                  const jumpTo = (id: string) => {
+                    const el = document.getElementById(`msg-${id}`);
+                    el?.scrollIntoView({ behavior: "smooth", block: "center" });
+                    // Flash highlight on the selected message
+                    el?.classList.add("search-flash");
+                    setTimeout(() => el?.classList.remove("search-flash"), 1600);
+                  };
+
+                  return count === 0 ? (
+                    <span className="text-xs text-bps-orange">
+                      Tidak ada pesan yang cocok
+                    </span>
+                  ) : (
+                    <div className="space-y-1">
+                      <div className="text-xs text-muted-foreground">
+                        Ditemukan <span className="font-semibold text-foreground">{count}</span> pesan yang cocok
+                      </div>
+                      <div className="max-h-48 overflow-y-auto rounded-lg border bg-background p-1.5">
+                        {matched.map((m) => {
+                          const snippet = m.role === "user" ? m.text : m.answer?.text || "";
+                          const idx = snippet.toLowerCase().indexOf(searchQuery.toLowerCase());
+                          const before = snippet.slice(0, Math.max(0, idx));
+                          const hit = snippet.slice(idx, idx + searchQuery.length);
+                          const after = snippet.slice(idx + searchQuery.length);
+                          return (
+                            <button
+                              key={m.id}
+                              onClick={() => jumpTo(m.id)}
+                              className="flex w-full items-start gap-2 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-muted"
+                            >
+                              <span
+                                className={cn(
+                                  "mt-0.5 shrink-0 rounded px-1 py-0.5 text-[10px] font-semibold uppercase",
+                                  m.role === "user"
+                                    ? "bg-bps-blue-soft text-bps-blue"
+                                    : "bg-bps-green-soft text-bps-green",
+                                )}
+                              >
+                                {m.role === "user" ? "Anda" : "AI"}
+                              </span>
+                              <span className="min-w-0 truncate text-[13px] text-muted-foreground">
+                                {idx <= 0 ? "" : "…"}
+                                {before.slice(before.length - 24)}
+                                <span className="rounded bg-yellow-200/50 px-0.5 font-medium text-yellow-900 dark:bg-yellow-800/50 dark:text-yellow-200">
+                                  {hit}
+                                </span>
+                                {after.slice(0, 40)}
+                                {after.length > 40 ? "…" : ""}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
           </div>
         </div>
       )}
 
       {/* ── Main Chat Area ── */}
-      <div className="min-h-0 flex-1 overflow-y-auto px-4 py-6 sm:px-6">
+      <div
+        ref={scrollRef}
+        onScroll={handleScroll}
+        className="min-h-0 flex-1 overflow-y-auto px-4 py-6 sm:px-6"
+      >
         <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
           {messages.length === 0 && <WelcomeState onQuickPrompt={handleQuickPrompt} />}
 
           {messages.map((m, i) =>
             m.role === "user" ? (
-              <UserMessage key={m.id} text={m.text} index={i} />
+              <UserMessage key={m.id} id={m.id} text={m.text} index={i} searchQuery={searchQuery} />
             ) : (
-              <AssistantMessage key={m.id} answer={m.answer} index={i} />
+              <AssistantMessage key={m.id} id={m.id} answer={m.answer} index={i} searchQuery={searchQuery} />
             ),
           )}
 
@@ -199,6 +344,7 @@ export function ChatWorkspace({
         onSend={handleSend}
         onKeyDown={handleKeyDown}
         disabled={stage !== null}
+        isCompact={isCompact}
       />
     </div>
   );
@@ -244,23 +390,45 @@ function WelcomeState({ onQuickPrompt }: { onQuickPrompt: (id: string) => void }
 }
 
 /* ─── User Message ─── */
-function UserMessage({ text, index }: { text: string; index: number }) {
+function UserMessage({ id, text, index, searchQuery }: { id: string; text: string; index: number; searchQuery?: string }) {
+  const highlightText = (t: string) => {
+    if (!searchQuery) return t;
+    const regex = new RegExp(`(${searchQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+    const parts = t.split(regex);
+    return parts.map((part, i) => 
+      regex.test(part) ? (
+        <span key={i} className="bg-yellow-200/50 text-yellow-900 dark:bg-yellow-800/50 dark:text-yellow-200 rounded px-0.5">{part}</span>
+      ) : part
+    );
+  };
+
   return (
-    <div className="animate-msg-in flex justify-end" style={{ animationDelay: `${index * 50}ms` }}>
+    <div id={`msg-${id}`} className="animate-msg-in flex justify-end scroll-mt-20" style={{ animationDelay: `${index * 50}ms` }}>
       <div className="max-w-[80%] rounded-2xl rounded-br-md bg-bps-blue-soft/80 px-4 py-2.5 text-[14px] leading-relaxed text-bps-blue-deep">
-        {text}
+        {highlightText(text)}
       </div>
     </div>
   );
 }
 
 /* ─── Assistant Message ─── */
-function AssistantMessage({ answer, index }: { answer: AiAnswer; index: number }) {
+function AssistantMessage({ id, answer, index, searchQuery }: { id: string; answer: AiAnswer; index: number; searchQuery?: string }) {
   const [copied, setCopied] = useState(false);
   const [vote, setVote] = useState<"up" | "down" | null>(null);
 
+  const highlightText = (t: string) => {
+    if (!searchQuery) return t;
+    const regex = new RegExp(`(${searchQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+    const parts = t.split(regex);
+    return parts.map((part, i) => 
+      regex.test(part) ? (
+        <span key={i} className="bg-yellow-200/50 text-yellow-900 dark:bg-yellow-800/50 dark:text-yellow-200 rounded px-0.5">{part}</span>
+      ) : part
+    );
+  };
+
   return (
-    <div className="animate-msg-in flex gap-3" style={{ animationDelay: `${index * 50}ms` }}>
+    <div id={`msg-${id}`} className="animate-msg-in flex gap-3 scroll-mt-20" style={{ animationDelay: `${index * 50}ms` }}>
       <BpsMark className="mt-0.5 h-8 w-8 shrink-0" />
       <div className="min-w-0 flex-1 space-y-4">
         {/* Label */}
@@ -274,12 +442,12 @@ function AssistantMessage({ answer, index }: { answer: AiAnswer; index: number }
             paragraph.startsWith("•") ? (
               <div key={i} className="flex gap-2 pl-1">
                 <span className="text-bps-blue">•</span>
-                <span>{paragraph.slice(2)}</span>
+                <span>{highlightText(paragraph.slice(2))}</span>
               </div>
             ) : paragraph.trim() === "" ? (
               <div key={i} className="h-2" />
             ) : (
-              <p key={i}>{paragraph}</p>
+              <p key={i}>{highlightText(paragraph)}</p>
             ),
           )}
         </div>
@@ -413,15 +581,22 @@ function Composer({
   onSend,
   onKeyDown,
   disabled,
+  isCompact,
 }: {
   input: string;
   setInput: (v: string) => void;
   onSend: (text?: string) => void;
   onKeyDown: (e: React.KeyboardEvent) => void;
   disabled: boolean;
+  isCompact: boolean;
 }) {
   return (
-    <div className="border-t bg-surface px-4 py-4 sm:px-6">
+    <div
+      className={cn(
+        "border-t bg-surface transition-all duration-300 ease-in-out",
+        isCompact ? "px-4 py-2 sm:px-6" : "px-4 py-4 sm:px-6",
+      )}
+    >
       <div className="mx-auto w-full max-w-3xl">
         <div className="rounded-xl border bg-background p-2 transition-colors focus-within:border-bps-blue focus-within:shadow-[0_0_0_1px_var(--bps-blue)]">
           <Textarea
@@ -430,40 +605,65 @@ function Composer({
             onKeyDown={onKeyDown}
             placeholder="Tanyakan apa saja tentang pekerjaan Anda..."
             disabled={disabled}
-            className="min-h-[52px] resize-none border-0 bg-transparent px-2 text-[14px] shadow-none focus-visible:ring-0"
+            className={cn(
+              "resize-none border-0 bg-transparent px-2 shadow-none focus-visible:ring-0 transition-all duration-300",
+              isCompact ? "min-h-[40px] text-[13px]" : "min-h-[52px] text-[14px]",
+            )}
           />
           <div className="flex items-center justify-between px-1 pt-1">
+            {!isCompact && (
             <div className="flex items-center gap-0.5">
               <Button
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8"
-                onClick={() => toast("Demo: pemilihan lampiran akan muncul di sini.")}
+                onClick={() => {
+                  toast("Demo: input suara/voice - belum aktif saat ini");
+                  // Tambahkan fungsi voice recognition nanti
+                }}
               >
-                <Paperclip className="h-4 w-4" />
+                <Mic className="h-4 w-4" />
               </Button>
               <Button
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8"
-                onClick={() => toast("Demo: input suara belum aktif pada prototipe.")}
+                onClick={() => {
+                  const fileInput = document.createElement('input');
+                  fileInput.type = 'file';
+                  fileInput.accept = '.csv,.xlsx,.xls';
+                  fileInput.onchange = (e) => {
+                    const file = (e.target as HTMLInputElement).files?.[0];
+                    if (file) {
+                      toast(`Demo: "${file.name}" berhasil dipilih (belum diunggah/ diproses)`);
+                      // Tambahkan fungsi upload & proses file nanti
+                    }
+                  };
+                  fileInput.click();
+                }}
               >
-                <Mic className="h-4 w-4" />
+                <Paperclip className="h-4 w-4" />
               </Button>
             </div>
+          )}
             <Button
               size="sm"
               onClick={() => onSend()}
               disabled={disabled || !input.trim()}
-              className="rounded-lg bg-bps-blue px-3.5 hover:bg-bps-blue/90"
+              className={cn(
+                "rounded-lg bg-bps-blue hover:bg-bps-blue/90 transition-all duration-300",
+                isCompact ? "px-3 h-8" : "px-3.5",
+              )}
             >
               <SendHorizontal className="h-4 w-4" />
             </Button>
           </div>
         </div>
-        <p className="mt-2 text-center text-[11px] text-muted-foreground">
-          AI dapat membuat kesalahan. Periksa kembali informasi penting dengan sumber resmi BPS.
-        </p>
+        {!isCompact && (
+          <p className="mt-2 text-center text-[11px] text-muted-foreground">
+            AI dapat membuat kesalahan. Periksa kembali informasi penting dengan sumber resmi BPS.
+          </p>
+        )}
       </div>
     </div>
   );

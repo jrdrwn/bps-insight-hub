@@ -33,7 +33,7 @@ function LoginPage() {
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => void navigate({ to: "/beranda" }), 700);
+    setTimeout(() => void navigate({ to: "/chat" }), 700);
   };
 
   return (

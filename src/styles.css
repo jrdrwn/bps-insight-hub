@@ -330,3 +330,24 @@
 .animate-msg-in {
   animation: bps-msg-in 280ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
+
+/* Search result jump flash */
+@keyframes bps-search-flash {
+  0% {
+    box-shadow: 0 0 0 2px var(--bps-blue);
+    background-color: color-mix(in srgb, var(--bps-blue) 8%, transparent);
+  }
+  60% {
+    box-shadow: 0 0 0 2px var(--bps-blue);
+    background-color: color-mix(in srgb, var(--bps-blue) 6%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 2px transparent;
+    background-color: transparent;
+  }
+}
+
+.search-flash {
+  border-radius: 12px;
+  animation: bps-search-flash 1600ms ease-out both;
+}
