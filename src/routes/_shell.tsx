@@ -1,7 +1,8 @@
 import { useCallback, useState } from "react";
-import { Outlet, createFileRoute } from "@tanstack/react-router";
+import { Outlet, createFileRoute, useLocation } from "@tanstack/react-router";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
+import { Topbar } from "@/components/topbar";
 import { useChat } from "@/hooks/use-chat";
 import { ChatContext } from "@/hooks/use-chat-context";
 
@@ -11,7 +12,12 @@ export const Route = createFileRoute("/_shell")({
 
 function ShellLayout() {
   const chat = useChat();
+  const location = useLocation();
   const [activeConversation, setActiveConversation] = useState<string | undefined>();
+
+  // Chat page renders its own header (ChatWorkspace), so skip the Topbar there
+  // to avoid a duplicated header.
+  const isChatPage = location.pathname.startsWith("/chat");
 
   const handleNewChat = useCallback(() => {
     chat.resetChat();
@@ -36,7 +42,8 @@ function ShellLayout() {
             activeConversationId={activeConversation}
           />
           <SidebarInset className="min-w-0">
-            <main className="min-h-0 flex-1">
+            {!isChatPage && <Topbar />}
+            <main className="flex min-h-0 flex-1 flex-col">
               <Outlet />
             </main>
           </SidebarInset>

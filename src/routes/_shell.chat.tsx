@@ -26,7 +26,7 @@ function ChatPage() {
   const chat = useChatContext();
 
   return (
-    <div className="h-screen">
+    <div className="flex min-h-0 flex-1 flex-col">
       <ChatWorkspace
         messages={chat.messages}
         stage={chat.stage}

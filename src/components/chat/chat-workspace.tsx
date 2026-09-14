@@ -31,6 +31,7 @@ import { DemoBadge, SourceCard, StatisticCard, TrustNote } from "@/components/co
 import { ChartCard, GrowthLineChart, MoversBarChart, PovertyAreaChart } from "@/components/charts";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/hooks/use-theme";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import { answerData, quickPromptAnswers } from "./mock-engine";
 import type { AiAnswer } from "./mock-engine";
 import type { ChatMessage } from "@/hooks/use-chat";
@@ -112,10 +113,13 @@ export function ChatWorkspace({
   return (
     <div className="flex h-full min-h-0 flex-col bg-background">
       {/* ── Chat Header ── */}
-      <header className="flex items-center justify-between gap-4 border-b bg-surface/85 px-6 py-3 backdrop-blur-sm">
-        <div className="min-w-0">
-          <h1 className="text-[15px] font-semibold tracking-tight">BPS AI Assistant</h1>
-          <p className="text-[12px] text-muted-foreground">AI Assistant • Internal Workspace</p>
+      <header className="flex flex-wrap items-center justify-between gap-3 border-b bg-surface/85 px-4 backdrop-blur">
+        <div className="flex min-w-0 items-center gap-2">
+          <SidebarTrigger />
+          <div className="min-w-0">
+            <h1 className="text-[15px] font-semibold tracking-tight">BPS AI Assistant</h1>
+            <p className="text-[12px] text-muted-foreground">AI Assistant • Internal Workspace</p>
+          </div>
         </div>
         <div className="flex items-center gap-1">
           <Button
@@ -147,7 +151,7 @@ export function ChatWorkspace({
           >
             <Bell className="h-4 w-4" />
           </Button>
-          <div className="ml-1 flex h-8 w-8 items-center justify-center rounded-lg bg-bps-blue text-xs font-semibold text-primary-foreground">
+          <div className="ml-1 hidden h-8 w-8 items-center justify-center rounded-lg bg-bps-blue text-xs font-semibold text-primary-foreground sm:flex">
             PB
           </div>
         </div>
