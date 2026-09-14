@@ -13,58 +13,50 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  useSidebar,
+  useSidebar
 } from "@/components/ui/sidebar";
+import type { ConversationItem } from "@/hooks/use-chat";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "@tanstack/react-router";
-import { ChevronDown, LogOut, Plus, Settings, User } from "lucide-react";
-
-type HistoryItem = {
-  id: string;
-  title: string;
-};
-
-type HistoryGroup = {
-  label: string;
-  items: HistoryItem[];
-};
-
-const historyGroups: HistoryGroup[] = [
-  {
-    label: "Hari ini",
-    items: [
-      { id: "pertumbuhan-ekonomi", title: "Analisis pertumbuhan ekonomi" },
-      { id: "data-kemiskinan", title: "Data kemiskinan Kalteng" },
-      { id: "inflasi", title: "Pertanyaan tentang inflasi" },
-    ],
-  },
-  {
-    label: "Kemarin",
-    items: [{ id: "metodologi-survei", title: "Metodologi survei" }],
-  },
-  {
-    label: "Minggu ini",
-    items: [{ id: "statistik-penduduk", title: "Ringkasan statistik penduduk" }],
-  },
-];
+import { ChevronDown, LogOut, MessageSquare, Pencil, Plus, Settings, User } from "lucide-react";
+import { useRef, useState } from "react";
 
 export function AppSidebar({
   onNewChat,
   onSelectConversation,
+  onRenameConversation,
   activeConversationId,
+  conversations = [],
 }: {
   onNewChat: () => void;
   onSelectConversation: (id: string) => void;
+  onRenameConversation: (id: string, title: string) => void;
   activeConversationId?: string;
+  conversations?: ConversationItem[];
 }) {
-  const { state } = useSidebar();
-  const collapsed = state === "collapsed";
+  const { state, isMobile } = useSidebar();
+  const collapsed = !isMobile && state === "collapsed";
   const navigate = useNavigate();
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState("");
+  const editInputRef = useRef<HTMLInputElement>(null);
+
+  const startRename = (conv: ConversationItem) => {
+    setEditingId(conv.id);
+    setEditValue(conv.title);
+    setTimeout(() => editInputRef.current?.focus(), 50);
+  };
+
+  const commitRename = () => {
+    if (editingId && editValue.trim()) {
+      onRenameConversation(editingId, editValue.trim());
+    }
+    setEditingId(null);
+  };
 
   return (
     <Sidebar collapsible="icon">
@@ -88,43 +80,67 @@ export function AppSidebar({
         </div>
 
         {/* Chat History */}
-        <div className="mt-4 px-3">
-          {!collapsed && (
-            <div className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Percakapan Terbaru
-            </div>
-          )}
-        </div>
-
-        {historyGroups.map((group) => (
-          <SidebarGroup key={group.label} className="pt-0">
+        {conversations.length > 0 && (
+          <div className="mt-4 px-3">
             {!collapsed && (
-              <SidebarGroupLabel className="text-[11px] text-muted-foreground/70">
-                {group.label}
-              </SidebarGroupLabel>
+              <div className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Percakapan Terbaru
+              </div>
             )}
+          </div>
+        )}
+
+        {conversations.length > 0 && (
+          <SidebarGroup className="pt-0">
             <SidebarGroupContent>
               <SidebarMenu>
-                {group.items.map((item) => (
-                  <SidebarMenuItem key={item.id}>
-                    <SidebarMenuButton
-                      onClick={() => onSelectConversation(item.id)}
-                      isActive={activeConversationId === item.id}
-                      tooltip={item.title}
-                      className={cn(
-                        "text-[13px]",
-                        activeConversationId === item.id &&
-                          "bg-bps-blue-soft/60 text-bps-blue-deep",
-                      )}
-                    >
-                      <span className="truncate">{item.title}</span>
-                    </SidebarMenuButton>
+                {conversations.map((conv) => (
+                  <SidebarMenuItem key={conv.id}>
+                    {editingId === conv.id ? (
+                      <input
+                        ref={editInputRef}
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        onBlur={commitRename}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") commitRename();
+                          if (e.key === "Escape") setEditingId(null);
+                        }}
+                        className="w-full rounded-md border bg-background px-2 py-1 text-[13px] outline-none focus:border-bps-blue"
+                      />
+                    ) : (
+                      <div className="group relative flex items-center">
+                        <SidebarMenuButton
+                          onClick={() => onSelectConversation(conv.id)}
+                          isActive={activeConversationId === conv.id}
+                          tooltip={conv.title}
+                          className={cn(
+                            "flex-1 text-[13px]",
+                            activeConversationId === conv.id &&
+                              "bg-bps-blue-soft/60 text-bps-blue-deep",
+                          )}
+                        >
+                          <MessageSquare className="h-3.5 w-3.5 shrink-0 opacity-50" />
+                          <span className="truncate">{conv.title}</span>
+                        </SidebarMenuButton>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            startRename(conv);
+                          }}
+                          className="absolute right-1 hidden rounded p-1 text-muted-foreground hover:bg-muted group-hover:block"
+                          title="Rename"
+                        >
+                          <Pencil className="h-3 w-3" />
+                        </button>
+                      </div>
+                    )}
                   </SidebarMenuItem>
                 ))}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
-        ))}
+        )}
       </SidebarContent>
 
       <SidebarFooter className="gap-2">

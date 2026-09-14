@@ -1,6 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
 import { ChatWorkspace } from "@/components/chat/chat-workspace";
 import { useChatContext } from "@/hooks/use-chat-context";
+import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_shell/chat")({
   head: () => ({
@@ -32,6 +32,7 @@ function ChatPage() {
         stage={chat.stage}
         loadingStageText={chat.loadingStageText}
         onSend={chat.sendMessage}
+        onFileUpload={chat.sendFile}
       />
     </div>
   );

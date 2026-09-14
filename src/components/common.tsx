@@ -1,7 +1,7 @@
-import { type LucideIcon } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { type LucideIcon } from "lucide-react";
 
 export function DemoBadge({ full = false, className }: { full?: boolean; className?: string }) {
   return (

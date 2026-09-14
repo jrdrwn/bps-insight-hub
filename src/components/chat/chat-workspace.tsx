@@ -12,10 +12,11 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
-import type { ChatMessage } from "@/hooks/use-chat";
+import type { AiAnswer, ChatMessage } from "@/hooks/use-chat";
 import { useTheme } from "@/hooks/use-theme";
 import { cn } from "@/lib/utils";
 import {
+    ArrowDown,
     Check,
     Copy,
     Mic,
@@ -31,8 +32,8 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import type { AiAnswer } from "./mock-engine";
 import { answerData } from "./mock-engine";
+import { AiBlockRenderer } from "./ai-blocks";
 
 /* ─── Quick Prompt Definitions ─── */
 const quickPrompts = [
@@ -68,56 +69,78 @@ export function ChatWorkspace({
   stage,
   loadingStageText,
   onSend,
+  onFileUpload,
 }: {
   messages: ChatMessage[];
   stage: number | null;
   loadingStageText: string | null;
   onSend: (text: string) => void;
+  onFileUpload?: (file: File, message?: string) => void;
 }) {
   const [input, setInput] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isCompact, setIsCompact] = useState(false);
+  const [isNearBottom, setIsNearBottom] = useState(true);
   const endRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const lastScrollTop = useRef(0);
   const scrollTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const rafId = useRef<number>(0);
 
   const { theme, toggle: toggleTheme } = useTheme();
 
   useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+    // Only auto-scroll if user is already near bottom
+    if (isNearBottom) {
+      endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages, stage]);
 
+  const scrollToBottom = useCallback(() => {
+    endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, []);
+
   const handleScroll = useCallback(() => {
-    const el = scrollRef.current;
-    if (!el) return;
+    if (rafId.current) return;
+    rafId.current = requestAnimationFrame(() => {
+      rafId.current = 0;
+      const el = scrollRef.current;
+      if (!el) return;
 
-    const scrollTop = el.scrollTop;
-    const scrollHeight = el.scrollHeight;
-    const clientHeight = el.clientHeight;
-    const atTop = scrollTop <= 5;
-    const atBottom = scrollTop + clientHeight >= scrollHeight - 5;
-    const scrollingDown = scrollTop > lastScrollTop.current;
+      const scrollTop = el.scrollTop;
+      const delta = scrollTop - lastScrollTop.current;
+      const atTop = scrollTop <= 5;
+      const atBottom = scrollTop + el.clientHeight >= el.scrollHeight - 150;
+      const atVeryBottom = scrollTop + el.clientHeight >= el.scrollHeight - 5;
 
-    // Collapse header when scrolling down and not near edges
-    if (scrollingDown && !atTop && !atBottom && scrollTop > 40) {
-      setIsCompact(true);
-    } else if (!scrollingDown || atTop || atBottom) {
-      setIsCompact(false);
-    }
+      // Near bottom threshold: 150px from bottom
+      setIsNearBottom(atVeryBottom);
 
-    lastScrollTop.current = scrollTop;
+      // Only react if scrolled more than 25px (avoid micro-jitter)
+      if (Math.abs(delta) > 25) {
+        if (delta > 0 && !atTop && !atBottom) {
+          setIsCompact(true);
+        } else if (delta < 0 || atTop || atBottom) {
+          setIsCompact(false);
+        }
+        lastScrollTop.current = scrollTop;
+      } else if (atTop || atVeryBottom) {
+        setIsCompact(false);
+        lastScrollTop.current = scrollTop;
+      }
 
-    // Expand again after scrolling stops
-    if (scrollTimeout.current) clearTimeout(scrollTimeout.current);
-    scrollTimeout.current = setTimeout(() => setIsCompact(false), 1200);
+      if (scrollTimeout.current) clearTimeout(scrollTimeout.current);
+      scrollTimeout.current = setTimeout(() => setIsCompact(false), 1500);
+    });
   }, []);
 
   useEffect(() => {
     return () => {
       if (scrollTimeout.current) clearTimeout(scrollTimeout.current);
+      if (rafId.current) cancelAnimationFrame(rafId.current);
     };
   }, []);
 
@@ -297,26 +320,46 @@ export function ChatWorkspace({
       )}
 
       {/* ── Main Chat Area ── */}
-      <div
-        ref={scrollRef}
-        onScroll={handleScroll}
-        className="min-h-0 flex-1 overflow-y-auto px-4 py-6 sm:px-6"
-      >
-        <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
-          {messages.length === 0 && <WelcomeState onQuickPrompt={handleQuickPrompt} />}
+      <div className="relative min-h-0 flex-1">
+        <div
+          ref={scrollRef}
+          onScroll={handleScroll}
+          className="h-full overflow-y-auto px-4 py-6 sm:px-6"
+        >
+          <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
+            {messages.length === 0 && <WelcomeState onQuickPrompt={handleQuickPrompt} />}
 
-          {messages.map((m, i) =>
-            m.role === "user" ? (
-              <UserMessage key={m.id} id={m.id} text={m.text} index={i} searchQuery={searchQuery} />
-            ) : (
-              <AssistantMessage key={m.id} id={m.id} answer={m.answer} index={i} searchQuery={searchQuery} />
-            ),
-          )}
+            {messages.map((m, i) =>
+              m.role === "user" ? (
+                <UserMessage key={m.id} id={m.id} text={m.text} index={i} searchQuery={searchQuery} />
+              ) : (
+                <AssistantMessage key={m.id} id={m.id} answer={m.answer} index={i} searchQuery={searchQuery} />
+              ),
+            )}
 
-          {stage !== null && <ThinkingBlock stageText={loadingStageText!} />}
+            {stage !== null && (
+              <div className="animate-fade-in flex items-center gap-2 pl-11 text-[13px] text-muted-foreground">
+                <span className="typing-dot" />
+                <span className="typing-dot" style={{ animationDelay: "0.15s" }} />
+                <span className="typing-dot" style={{ animationDelay: "0.3s" }} />
+                <span className="ml-1">{loadingStageText}</span>
+              </div>
+            )}
 
-          <div ref={endRef} />
+            <div ref={endRef} />
+          </div>
         </div>
+
+        {/* Scroll-to-bottom FAB */}
+        {!isNearBottom && (
+          <button
+            onClick={scrollToBottom}
+            className="absolute bottom-4 left-1/2 z-10 flex h-9 w-9 -translate-x-1/2 items-center justify-center rounded-full border bg-background/90 shadow-lg backdrop-blur-sm transition-all hover:bg-muted animate-fade-in"
+            title="Scroll ke bawah"
+          >
+            <ArrowDown className="h-4 w-4" />
+          </button>
+        )}
       </div>
 
       {/* ── Composer ── */}
@@ -324,6 +367,7 @@ export function ChatWorkspace({
         input={input}
         setInput={setInput}
         onSend={handleSend}
+        onFileUpload={onFileUpload}
         onKeyDown={handleKeyDown}
         disabled={stage !== null}
         isCompact={isCompact}
@@ -418,20 +462,9 @@ function AssistantMessage({ id, answer, index, searchQuery }: { id: string; answ
           <span className="text-[13px] font-semibold text-foreground">BPS AI Assistant</span>
         </div>
 
-        {/* Text Content */}
-        <div className="space-y-3 text-[14px] leading-relaxed text-foreground/85">
-          {answer.text.split("\n").map((paragraph, i) =>
-            paragraph.startsWith("•") ? (
-              <div key={i} className="flex gap-2 pl-1">
-                <span className="text-bps-blue">•</span>
-                <span>{highlightText(paragraph.slice(2))}</span>
-              </div>
-            ) : paragraph.trim() === "" ? (
-              <div key={i} className="h-2" />
-            ) : (
-              <p key={i}>{highlightText(paragraph)}</p>
-            ),
-          )}
+        {/* Text Content — supports charts, images, files, embeds, tables */}
+        <div className="text-[14px] leading-relaxed text-foreground/85">
+          <AiBlockRenderer text={answer.text} />
         </div>
 
         {/* KPI Cards */}
@@ -498,9 +531,10 @@ function AssistantMessage({ id, answer, index, searchQuery }: { id: string; answ
             icon={copied ? Check : Copy}
             label={copied ? "Disalin" : "Copy"}
             onClick={() => {
-              setCopied(true);
-              toast("Demo: teks jawaban disalin.");
-              setTimeout(() => setCopied(false), 1500);
+              void navigator.clipboard.writeText(answer.text).then(() => {
+                setCopied(true);
+                setTimeout(() => setCopied(false), 1500);
+              });
             }}
           />
           <ActionBtn
@@ -531,36 +565,12 @@ function AssistantMessage({ id, answer, index, searchQuery }: { id: string; answ
   );
 }
 
-/* ─── Thinking / Loading Block ─── */
-function ThinkingBlock({ stageText }: { stageText: string }) {
-  return (
-    <div className="animate-fade-up flex gap-3">
-      <BpsMark className="mt-0.5 h-8 w-8 shrink-0" />
-      <div className="flex-1 space-y-3">
-        <div className="flex items-center gap-2.5">
-          <span className="text-[13px] font-semibold text-foreground">BPS AI Assistant</span>
-        </div>
-        <div className="flex items-center gap-2.5 text-[14px] text-muted-foreground">
-          <span className="typing-dot" />
-          <span className="typing-dot" />
-          <span className="typing-dot" />
-          <span className="ml-1">{stageText}</span>
-        </div>
-        <div className="space-y-2">
-          <div className="shimmer-line h-3 w-3/4" />
-          <div className="shimmer-line h-3 w-1/2" />
-          <div className="shimmer-line h-20 w-full rounded-xl" />
-        </div>
-      </div>
-    </div>
-  );
-}
-
 /* ─── Composer ─── */
 function Composer({
   input,
   setInput,
   onSend,
+  onFileUpload,
   onKeyDown,
   disabled,
   isCompact,
@@ -568,10 +578,28 @@ function Composer({
   input: string;
   setInput: (v: string) => void;
   onSend: (text?: string) => void;
+  onFileUpload?: (file: File, message?: string) => void;
   onKeyDown: (e: React.KeyboardEvent) => void;
   disabled: boolean;
   isCompact: boolean;
 }) {
+  const handleFileSelect = () => {
+    const fileInput = document.createElement("input");
+    fileInput.type = "file";
+    fileInput.accept = ".csv,.xlsx,.xls,.png,.jpg,.jpeg,.gif,.webp,.pdf,.txt,.json";
+    fileInput.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+      if (onFileUpload) {
+        onFileUpload(file, input.trim() || undefined);
+        setInput("");
+      } else {
+        toast(`"${file.name}" dipilih — upload belum terhubung ke API.`);
+      }
+    };
+    fileInput.click();
+  };
+
   return (
     <div
       className={cn(
@@ -600,8 +628,7 @@ function Composer({
                 size="icon"
                 className="h-8 w-8"
                 onClick={() => {
-                  toast("Demo: input suara/voice - belum aktif saat ini");
-                  // Tambahkan fungsi voice recognition nanti
+                  toast("Voice input belum aktif.");
                 }}
               >
                 <Mic className="h-4 w-4" />
@@ -610,19 +637,8 @@ function Composer({
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8"
-                onClick={() => {
-                  const fileInput = document.createElement('input');
-                  fileInput.type = 'file';
-                  fileInput.accept = '.csv,.xlsx,.xls';
-                  fileInput.onchange = (e) => {
-                    const file = (e.target as HTMLInputElement).files?.[0];
-                    if (file) {
-                      toast(`Demo: "${file.name}" berhasil dipilih (belum diunggah/ diproses)`);
-                      // Tambahkan fungsi upload & proses file nanti
-                    }
-                  };
-                  fileInput.click();
-                }}
+                onClick={handleFileSelect}
+                title="Lampirkan file atau gambar"
               >
                 <Paperclip className="h-4 w-4" />
               </Button>
