@@ -17,12 +17,22 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  useSidebar
+  useSidebar,
 } from "@/components/ui/sidebar";
 import type { ConversationItem } from "@/hooks/use-chat";
 import { cn } from "@/lib/utils";
-import { useNavigate } from "@tanstack/react-router";
-import { ChevronDown, LogOut, MessageSquare, Pencil, Plus, Settings, User } from "lucide-react";
+import { useLocation, useNavigate } from "@tanstack/react-router";
+import {
+  ChevronDown,
+  FileUp,
+  FolderOpen,
+  LogOut,
+  MessageSquare,
+  Pencil,
+  Plus,
+  Settings,
+  User,
+} from "lucide-react";
 import { useRef, useState } from "react";
 
 export function AppSidebar({
@@ -38,9 +48,10 @@ export function AppSidebar({
   activeConversationId?: string;
   conversations?: ConversationItem[];
 }) {
-  const { state, isMobile } = useSidebar();
+  const { state, isMobile, setOpenMobile } = useSidebar();
   const collapsed = !isMobile && state === "collapsed";
   const navigate = useNavigate();
+  const location = useLocation();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
   const editInputRef = useRef<HTMLInputElement>(null);
@@ -141,6 +152,47 @@ export function AppSidebar({
             </SidebarGroupContent>
           </SidebarGroup>
         )}
+
+        <div className="mt-auto px-3 pb-3">
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                onClick={() => {
+                  if (isMobile) setOpenMobile(false);
+                  void navigate({ to: "/rag-documents" });
+                }}
+                isActive={location.pathname === "/rag-documents"}
+                tooltip="Unggah Dokumen"
+                className={cn(
+                  "text-[13px]",
+                  location.pathname.startsWith("/rag-documents") &&
+                    "bg-bps-blue-soft/60 text-bps-blue-deep",
+                )}
+              >
+                <FileUp className="h-4 w-4 shrink-0" />
+                <span>Unggah Dokumen</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                onClick={() => {
+                  if (isMobile) setOpenMobile(false);
+                  void navigate({ to: "/rag-document-collection" });
+                }}
+                isActive={location.pathname === "/rag-document-collection"}
+                tooltip="Koleksi Dokumen"
+                className={cn(
+                  "text-[13px]",
+                  location.pathname === "/rag-documents/collection" &&
+                    "bg-bps-blue-soft/60 text-bps-blue-deep",
+                )}
+              >
+                <FolderOpen className="h-4 w-4 shrink-0" />
+                <span>Koleksi Dokumen</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </div>
       </SidebarContent>
 
       <SidebarFooter className="gap-2">

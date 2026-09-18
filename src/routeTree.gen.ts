@@ -14,8 +14,11 @@ import { Route as ShellRouteImport } from './routes/_shell'
 import { Route as ShellAskDataRouteImport } from './routes/_shell.ask-data'
 import { Route as ShellBerandaRouteImport } from './routes/_shell.beranda'
 import { Route as ShellChatRouteImport } from './routes/_shell.chat'
+import { Route as ShellRagDocumentCollectionRouteImport } from './routes/_shell.rag-document-collection'
+import { Route as ShellRagDocumentsRouteImport } from './routes/_shell.rag-documents'
 import { Route as ShellDataIndexRouteImport } from './routes/_shell.data.index'
 import { Route as ShellDataDatasetIdRouteImport } from './routes/_shell.data.$datasetId'
+import { Route as ShellRagDocumentsCollectionRouteImport } from './routes/_shell.rag-documents.collection'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -41,6 +44,17 @@ const ShellChatRoute = ShellChatRouteImport.update({
   path: '/chat',
   getParentRoute: () => ShellRoute,
 } as any)
+const ShellRagDocumentCollectionRoute =
+  ShellRagDocumentCollectionRouteImport.update({
+    id: '/rag-document-collection',
+    path: '/rag-document-collection',
+    getParentRoute: () => ShellRoute,
+  } as any)
+const ShellRagDocumentsRoute = ShellRagDocumentsRouteImport.update({
+  id: '/rag-documents',
+  path: '/rag-documents',
+  getParentRoute: () => ShellRoute,
+} as any)
 const ShellDataIndexRoute = ShellDataIndexRouteImport.update({
   id: '/data/',
   path: '/data/',
@@ -51,13 +65,22 @@ const ShellDataDatasetIdRoute = ShellDataDatasetIdRouteImport.update({
   path: '/data/$datasetId',
   getParentRoute: () => ShellRoute,
 } as any)
+const ShellRagDocumentsCollectionRoute =
+  ShellRagDocumentsCollectionRouteImport.update({
+    id: '/collection',
+    path: '/collection',
+    getParentRoute: () => ShellRagDocumentsRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/ask-data': typeof ShellAskDataRoute
   '/beranda': typeof ShellBerandaRoute
   '/chat': typeof ShellChatRoute
+  '/rag-document-collection': typeof ShellRagDocumentCollectionRoute
+  '/rag-documents': typeof ShellRagDocumentsRouteWithChildren
   '/data/$datasetId': typeof ShellDataDatasetIdRoute
+  '/rag-documents/collection': typeof ShellRagDocumentsCollectionRoute
   '/data/': typeof ShellDataIndexRoute
 }
 export interface FileRoutesByTo {
@@ -65,7 +88,10 @@ export interface FileRoutesByTo {
   '/ask-data': typeof ShellAskDataRoute
   '/beranda': typeof ShellBerandaRoute
   '/chat': typeof ShellChatRoute
+  '/rag-document-collection': typeof ShellRagDocumentCollectionRoute
+  '/rag-documents': typeof ShellRagDocumentsRouteWithChildren
   '/data/$datasetId': typeof ShellDataDatasetIdRoute
+  '/rag-documents/collection': typeof ShellRagDocumentsCollectionRoute
   '/data': typeof ShellDataIndexRoute
 }
 export interface FileRoutesById {
@@ -75,15 +101,35 @@ export interface FileRoutesById {
   '/_shell/ask-data': typeof ShellAskDataRoute
   '/_shell/beranda': typeof ShellBerandaRoute
   '/_shell/chat': typeof ShellChatRoute
+  '/_shell/rag-document-collection': typeof ShellRagDocumentCollectionRoute
+  '/_shell/rag-documents': typeof ShellRagDocumentsRouteWithChildren
   '/_shell/data/$datasetId': typeof ShellDataDatasetIdRoute
+  '/_shell/rag-documents/collection': typeof ShellRagDocumentsCollectionRoute
   '/_shell/data/': typeof ShellDataIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/ask-data' | '/beranda' | '/chat' | '/data/$datasetId' | '/data/'
+    | '/'
+    | '/ask-data'
+    | '/beranda'
+    | '/chat'
+    | '/rag-document-collection'
+    | '/rag-documents'
+    | '/data/$datasetId'
+    | '/rag-documents/collection'
+    | '/data/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/ask-data' | '/beranda' | '/chat' | '/data/$datasetId' | '/data'
+  to:
+    | '/'
+    | '/ask-data'
+    | '/beranda'
+    | '/chat'
+    | '/rag-document-collection'
+    | '/rag-documents'
+    | '/data/$datasetId'
+    | '/rag-documents/collection'
+    | '/data'
   id:
     | '__root__'
     | '/'
@@ -91,7 +137,10 @@ export interface FileRouteTypes {
     | '/_shell/ask-data'
     | '/_shell/beranda'
     | '/_shell/chat'
+    | '/_shell/rag-document-collection'
+    | '/_shell/rag-documents'
     | '/_shell/data/$datasetId'
+    | '/_shell/rag-documents/collection'
     | '/_shell/data/'
   fileRoutesById: FileRoutesById
 }
@@ -137,6 +186,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ShellChatRouteImport
       parentRoute: typeof ShellRoute
     }
+    '/_shell/rag-document-collection': {
+      id: '/_shell/rag-document-collection'
+      path: '/rag-document-collection'
+      fullPath: '/rag-document-collection'
+      preLoaderRoute: typeof ShellRagDocumentCollectionRouteImport
+      parentRoute: typeof ShellRoute
+    }
+    '/_shell/rag-documents': {
+      id: '/_shell/rag-documents'
+      path: '/rag-documents'
+      fullPath: '/rag-documents'
+      preLoaderRoute: typeof ShellRagDocumentsRouteImport
+      parentRoute: typeof ShellRoute
+    }
     '/_shell/data/': {
       id: '/_shell/data/'
       path: '/data'
@@ -151,13 +214,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ShellDataDatasetIdRouteImport
       parentRoute: typeof ShellRoute
     }
+    '/_shell/rag-documents/collection': {
+      id: '/_shell/rag-documents/collection'
+      path: '/collection'
+      fullPath: '/rag-documents/collection'
+      preLoaderRoute: typeof ShellRagDocumentsCollectionRouteImport
+      parentRoute: typeof ShellRagDocumentsRoute
+    }
   }
 }
+
+interface ShellRagDocumentsRouteChildren {
+  ShellRagDocumentsCollectionRoute: typeof ShellRagDocumentsCollectionRoute
+}
+
+const ShellRagDocumentsRouteChildren: ShellRagDocumentsRouteChildren = {
+  ShellRagDocumentsCollectionRoute: ShellRagDocumentsCollectionRoute,
+}
+
+const ShellRagDocumentsRouteWithChildren =
+  ShellRagDocumentsRoute._addFileChildren(ShellRagDocumentsRouteChildren)
 
 interface ShellRouteChildren {
   ShellAskDataRoute: typeof ShellAskDataRoute
   ShellBerandaRoute: typeof ShellBerandaRoute
   ShellChatRoute: typeof ShellChatRoute
+  ShellRagDocumentCollectionRoute: typeof ShellRagDocumentCollectionRoute
+  ShellRagDocumentsRoute: typeof ShellRagDocumentsRouteWithChildren
   ShellDataDatasetIdRoute: typeof ShellDataDatasetIdRoute
   ShellDataIndexRoute: typeof ShellDataIndexRoute
 }
@@ -166,6 +249,8 @@ const ShellRouteChildren: ShellRouteChildren = {
   ShellAskDataRoute: ShellAskDataRoute,
   ShellBerandaRoute: ShellBerandaRoute,
   ShellChatRoute: ShellChatRoute,
+  ShellRagDocumentCollectionRoute: ShellRagDocumentCollectionRoute,
+  ShellRagDocumentsRoute: ShellRagDocumentsRouteWithChildren,
   ShellDataDatasetIdRoute: ShellDataDatasetIdRoute,
   ShellDataIndexRoute: ShellDataIndexRoute,
 }
